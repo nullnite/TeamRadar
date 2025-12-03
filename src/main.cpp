@@ -1,7 +1,7 @@
 #include <Adafruit_GFX.h>     // Core graphics library
 #include <Adafruit_ST7789.h>  // Hardware-specific library for ST7789
 #include <Arduino.h>
-#include <DFRobot_QMC5883.h>
+#include <QMC5883LCompass.h>
 #include <SPI.h>
 
 // Screen parameters
@@ -15,7 +15,7 @@ constexpr int8_t TFT_DC = WB_SW1;
 Adafruit_ST7789 tft = Adafruit_ST7789(TFT_CS, TFT_DC, TFT_RST);
 GFXcanvas16 canvas = GFXcanvas16(TFT_WIDTH, TFT_HEIGHT);
 
-DFRobot_QMC5883 compass(&Wire, QMC5883_ADDRESS);
+QMC5883LCompass compass;
 
 int roundUp(int numToRound, int multiple) {
     if (multiple == 0)
@@ -31,7 +31,7 @@ int roundUp(int numToRound, int multiple) {
         return numToRound + multiple - remainder;
 }
 
-void drawCompass(float heading) {
+void drawCompass(int heading) {
     constexpr int16_t radius = 100;
     constexpr uint16_t background_color = ST77XX_BLACK;
     constexpr uint16_t color = ST77XX_GREEN;
@@ -42,7 +42,7 @@ void drawCompass(float heading) {
     canvas.fillScreen(background_color);
     canvas.drawCircle(center_x, center_y, radius, color);
 
-    const int rounded_heading = roundUp((int)heading, 40);
+    const int rounded_heading = roundUp(heading, 40);
 
     const float heading_radians1 = (rounded_heading - 20) * PI / 180;
     const int16_t heading_x1 = center_x + radius * sin(heading_radians1);
@@ -56,16 +56,15 @@ void drawCompass(float heading) {
     tft.drawRGBBitmap(0, 0, canvas.getBuffer(), canvas.width(), canvas.height());
 }
 
-float readMagnetomer() {
+int readMagnetomer() {
     // Magnetic declination for Kaunas, Lithuania
     // Formula: (deg + (min / 60.0)) / (180 / PI);
-    constexpr float declinationAngle = (8.0 + (19.0 / 60.0)) / (180 / PI);
-    compass.setDeclinationAngle(declinationAngle);
+    constexpr int declinationAngle = (8.0 + (19.0 / 60.0)) / (180 / PI);
 
-    sVector_t mag = compass.readRaw();
-    compass.getHeadingDegrees();
+    compass.read();
+    int heading = compass.getAzimuth() + declinationAngle;
 
-    return mag.HeadingDegress;
+    return heading;
 }
 
 void setup() {
@@ -75,17 +74,16 @@ void setup() {
     tft.init(TFT_WIDTH, TFT_HEIGHT);
     Serial.println(F("Screen initialized"));
 
-    while (!compass.begin()) {
-        Serial.println("Could not find a valid QMC5883 sensor, check wiring!");
-        delay(500);
-    }
+    compass.init();
+    compass.setCalibrationOffsets(922.00, 584.00, -2426.00);
+    compass.setCalibrationScales(1.39, 1.03, 0.76);
     Serial.println("Magnetometer initialized");
 
     delay(1000);
 }
 
 void loop() {
-    float heading = readMagnetomer();
+    int heading = readMagnetomer();
     // Serial.printf("Heading: %f\n", heading);
 
     drawCompass(heading);
