@@ -17,6 +17,20 @@ GFXcanvas16 canvas = GFXcanvas16(TFT_WIDTH, TFT_HEIGHT);
 
 DFRobot_QMC5883 compass(&Wire, QMC5883_ADDRESS);
 
+int roundUp(int numToRound, int multiple) {
+    if (multiple == 0)
+        return numToRound;
+
+    int remainder = abs(numToRound) % multiple;
+    if (remainder == 0)
+        return numToRound;
+
+    if (numToRound < 0)
+        return -(abs(numToRound) - remainder);
+    else
+        return numToRound + multiple - remainder;
+}
+
 void drawCompass(float heading) {
     constexpr int16_t radius = 100;
     constexpr uint16_t background_color = ST77XX_BLACK;
@@ -28,11 +42,17 @@ void drawCompass(float heading) {
     canvas.fillScreen(background_color);
     canvas.drawCircle(center_x, center_y, radius, color);
 
-    const float heading_radians = heading * PI / 180;
-    const int16_t heading_x = center_x + radius * sin(heading_radians);
-    const int16_t heading_y = center_y + radius * cos(heading_radians);
-    canvas.drawLine(center_x, center_y, heading_x, heading_y, color);
+    const int rounded_heading = roundUp((int)heading, 40);
 
+    const float heading_radians1 = (rounded_heading - 20) * PI / 180;
+    const int16_t heading_x1 = center_x + radius * sin(heading_radians1);
+    const int16_t heading_y1 = center_y + radius * cos(heading_radians1);
+
+    const float heading_radians2 = (rounded_heading + 20) * PI / 180;
+    const int16_t heading_x2 = center_x + radius * sin(heading_radians2);
+    const int16_t heading_y2 = center_y + radius * cos(heading_radians2);
+
+    canvas.fillTriangle(center_x, center_y, heading_x1, heading_y1, heading_x2, heading_y2, color);
     tft.drawRGBBitmap(0, 0, canvas.getBuffer(), canvas.width(), canvas.height());
 }
 
