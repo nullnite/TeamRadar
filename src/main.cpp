@@ -16,13 +16,21 @@ Adafruit_ST7789 tft = Adafruit_ST7789(TFT_CS, TFT_DC, TFT_RST);
 
 DFRobot_QMC5883 compass(&Wire, QMC5883_ADDRESS);
 
-void drawCompass() {
+void drawCompass(float heading) {
     constexpr int16_t radius = 100;
     constexpr uint16_t background_color = ST77XX_BLACK;
     constexpr uint16_t color = ST77XX_GREEN;
 
+    constexpr int16_t center_x = TFT_WIDTH / 2;
+    constexpr int16_t center_y = TFT_HEIGHT / 2;
+
     tft.fillScreen(background_color);
-    tft.drawCircle(TFT_WIDTH / 2, TFT_HEIGHT / 2, radius, color);
+    tft.drawCircle(center_x, center_y, radius, color);
+
+    const float heading_radians = heading * PI / 180;
+    const int16_t heading_x = center_x + radius * sin(heading_radians);
+    const int16_t heading_y = center_y + radius * cos(heading_radians);
+    tft.drawLine(center_x, center_y, heading_x, heading_y, color);
 }
 
 float readMagnetomer() {
@@ -55,11 +63,9 @@ void setup() {
 
 void loop() {
     float heading = readMagnetomer();
-    Serial.printf("Heading: %f\n", heading);
+    // Serial.printf("Heading: %f\n", heading);
 
-    drawCompass();
-    uint32_t time = millis();
-    Serial.printf("Drew compass at %d\n", time);
-
-    delay(500);
+    drawCompass(heading);
+    // uint32_t time = millis();
+    //  Serial.printf("Drew compass at %d\n", time);
 }
