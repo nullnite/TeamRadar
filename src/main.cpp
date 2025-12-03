@@ -13,6 +13,7 @@ constexpr int8_t TFT_RST = 27;
 constexpr int8_t TFT_DC = WB_SW1;
 
 Adafruit_ST7789 tft = Adafruit_ST7789(TFT_CS, TFT_DC, TFT_RST);
+GFXcanvas16 canvas = GFXcanvas16(TFT_WIDTH, TFT_HEIGHT);
 
 DFRobot_QMC5883 compass(&Wire, QMC5883_ADDRESS);
 
@@ -24,13 +25,15 @@ void drawCompass(float heading) {
     constexpr int16_t center_x = TFT_WIDTH / 2;
     constexpr int16_t center_y = TFT_HEIGHT / 2;
 
-    tft.fillScreen(background_color);
-    tft.drawCircle(center_x, center_y, radius, color);
+    canvas.fillScreen(background_color);
+    canvas.drawCircle(center_x, center_y, radius, color);
 
     const float heading_radians = heading * PI / 180;
     const int16_t heading_x = center_x + radius * sin(heading_radians);
     const int16_t heading_y = center_y + radius * cos(heading_radians);
-    tft.drawLine(center_x, center_y, heading_x, heading_y, color);
+    canvas.drawLine(center_x, center_y, heading_x, heading_y, color);
+
+    tft.drawRGBBitmap(0, 0, canvas.getBuffer(), canvas.width(), canvas.height());
 }
 
 float readMagnetomer() {
@@ -67,5 +70,5 @@ void loop() {
 
     drawCompass(heading);
     // uint32_t time = millis();
-    //  Serial.printf("Drew compass at %d\n", time);
+    // Serial.printf("Drew compass at %d\n", time);
 }
