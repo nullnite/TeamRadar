@@ -98,13 +98,13 @@ float computeHeading(float mx_raw, float my_raw, float mz_raw,
                      float ax, float ay, float az) {
     // Calibration coefficients from MotionCal
     // Hard iron offsets
-    constexpr float offX = -16.90f;
-    constexpr float offY = 8.35f;
-    constexpr float offZ = 11.46f;
+    constexpr float offX = -17.37f;
+    constexpr float offY = -1.72f;
+    constexpr float offZ = 10.90f;
     // Soft iron matrix
-    constexpr float M00 = 1.020f, M01 = -0.047f, M02 = -0.048f;
-    constexpr float M10 = -0.047f, M11 = 1.078f, M12 = -0.032f;
-    constexpr float M20 = -0.048f, M21 = -0.032f, M22 = 0.915f;
+    constexpr float M00 = 1.014f, M01 = -0.000f, M02 = 0.006f;
+    constexpr float M10 = -0.000f, M11 = 0.990f, M12 = 0.002f;
+    constexpr float M20 = 0.006f, M21 = 0.002f, M22 = 0.996f;
 
     // Corect hard iron
     float mx_corr = mx_raw - offX;
@@ -115,6 +115,7 @@ float computeHeading(float mx_raw, float my_raw, float mz_raw,
     float my = M10 * mx_corr + M11 * my_corr + M12 * mz_corr;
     float mz = M20 * mx_corr + M21 * my_corr + M22 * mz_corr;
 
+    /*
     // Compute roll/pitch from accelerometer
     float normA = sqrtf(ax * ax + ay * ay + az * az);
     if (normA < 1e-6f) return NAN;
@@ -126,8 +127,9 @@ float computeHeading(float mx_raw, float my_raw, float mz_raw,
     // Compensate for tilt
     float mxh = mx * cosf(pitch) + mz * sinf(pitch);
     float myh = mx * sinf(roll) * sinf(pitch) + my * cosf(roll) - mz * sinf(roll) * cosf(pitch);
+    */
 
-    float heading_rad = atan2f(myh, mxh);
+    float heading_rad = atan2f(-my, mx);
     float heading_deg = heading_rad * 180.0f / M_PI;
 
     heading_deg = fmodf(heading_deg + 360.0f, 360.0f);
@@ -143,9 +145,11 @@ int getHeading() {
 
     readIMU();
 
-    float heading = computeHeading(myICM.agmt.mag.axes.x, myICM.agmt.mag.axes.y, myICM.agmt.mag.axes.z,
-                                   myICM.accX(), myICM.accY(), myICM.accZ()) +
-                    declinationAngle;
+    float heading = computeHeading(myICM.magX(), myICM.magY(), myICM.magZ(),
+                                   myICM.accX(), myICM.accY(), myICM.accZ());
+    //+declinationAngle;
+
+    Serial.println(heading);
 
     return heading;
 }
