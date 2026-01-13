@@ -40,9 +40,9 @@ void initIMU() {
     */
 }
 
-void readIMU() {
+ICM_20948_AGMT_t readIMU() {
     if (myICM.dataReady()) {
-        myICM.getAGMT();
+        return myICM.getAGMT();
     }
 
     /*
@@ -95,61 +95,77 @@ void readIMU() {
 }
 
 float computeHeading(float mx_raw, float my_raw, float mz_raw,
-                     float ax, float ay, float az) {
-    // Calibration coefficients from MotionCal
-    // Hard iron offsets
-    constexpr float offX = -17.37f;
-    constexpr float offY = -1.72f;
-    constexpr float offZ = 10.90f;
-    // Soft iron matrix
-    constexpr float M00 = 1.014f, M01 = -0.000f, M02 = 0.006f;
-    constexpr float M10 = -0.000f, M11 = 0.990f, M12 = 0.002f;
-    constexpr float M20 = 0.006f, M21 = 0.002f, M22 = 0.996f;
+                     float ax_raw, float ay_raw, float az_raw) {
+    // Magnetometer calibration coefficients from MotionCal
+    constexpr float hard_iron[3] =
+        {-17.12, -5.76, 11.15};
+    constexpr float soft_iron[3][3] = {
+        {1.006, 0.000, 0.009},
+        {0.000, 0.998, -0.001},
+        {0.009, -0.001, 0.996}};
 
-    // Corect hard iron
-    float mx_corr = mx_raw - offX;
-    float my_corr = my_raw - offY;
-    float mz_corr = mz_raw - offZ;
-    // Correct soft iron
-    float mx = M00 * mx_corr + M01 * my_corr + M02 * mz_corr;
-    float my = M10 * mx_corr + M11 * my_corr + M12 * mz_corr;
-    float mz = M20 * mx_corr + M21 * my_corr + M22 * mz_corr;
+    float mx_hi = mx_raw - hard_iron[0];
+    float my_hi = my_raw - hard_iron[1];
+    float mz_hi = mz_raw - hard_iron[2];
+
+    float mx_cal = soft_iron[0][0] * mx_hi + soft_iron[0][1] * my_hi + soft_iron[0][2] * mz_hi;
+    float my_cal = soft_iron[1][0] * mx_hi + soft_iron[1][1] * my_hi + soft_iron[1][2] * mz_hi;
+    float mz_cal = soft_iron[2][0] * mx_hi + soft_iron[2][1] * my_hi + soft_iron[2][2] * mz_hi;
+
+    // Remap axis
+    // Magnetometer:
+    // +X back -> forward = -X
+    // +Y left -> left    = +Y
+    // +Z down -> down    = +Z
+    float mx = -mx_cal;
+    float my = my_cal;
+    float mz = mz_cal;
 
     /*
+    // Accelerometer:
+    // +X back  -> forward = -X
+    // +Y right -> right   = +Y
+    // +Z up    -> up      = +Z
+    float ax = ax_raw;
+    float ay = ay_raw;
+    float az = az_raw;
+
     // Compute roll/pitch from accelerometer
     float normA = sqrtf(ax * ax + ay * ay + az * az);
     if (normA < 1e-6f) return NAN;
-    float axn = ax / normA, ayn = ay / normA, azn = az / normA;
+    ax /= normA;
+    ay /= normA;
+    az /= normA;
 
-    float roll = atan2f(ayn, azn);
-    float pitch = asinf(-axn);
+    Serial.print("Roll:");
+    float roll = atan2f(ay, az);
+    Serial.println(roll);
+    Serial.print("Pitch:");
+    float pitch = atan2f(-ax, sqrtf(ay * ay + az * az));
+    Serial.println(pitch);
 
     // Compensate for tilt
     float mxh = mx * cosf(pitch) + mz * sinf(pitch);
     float myh = mx * sinf(roll) * sinf(pitch) + my * cosf(roll) - mz * sinf(roll) * cosf(pitch);
     */
 
-    float heading_rad = atan2f(-my, mx);
+    float heading_rad = atan2f(my, mx);
     float heading_deg = heading_rad * 180.0f / M_PI;
 
-    heading_deg = fmodf(heading_deg + 360.0f, 360.0f);
     if (heading_deg < 0.0f) heading_deg += 360.0f;
+    if (heading_deg >= 360.0f) heading_deg -= 360.0f;
 
     return heading_deg;
 }
 
-int getHeading() {
-    // Magnetic declination for Kaunas, Lithuania
-    // Formula: (deg + (min / 60.0)) / (180 / PI);
-    constexpr int declinationAngle = (8.0 + (19.0 / 60.0)) / (180 / PI);
+float getHeading() {
+    ICM_20948_AGMT_t agmt = readIMU();
 
-    readIMU();
+    ICM_20948_axis3named_t acc = agmt.acc;
+    ICM_20948_axis3named_t mag = agmt.mag;
 
-    float heading = computeHeading(myICM.magX(), myICM.magY(), myICM.magZ(),
-                                   myICM.accX(), myICM.accY(), myICM.accZ());
-    //+declinationAngle;
-
-    Serial.println(heading);
+    float heading = computeHeading(mag.axes.x * 0.1, mag.axes.y * 0.1, mag.axes.z * 0.1,
+                                   acc.axes.x, acc.axes.y, acc.axes.z);
 
     return heading;
 }

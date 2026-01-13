@@ -32,21 +32,21 @@ bool parseNMEA(uint8_t* message, size_t message_length, gnss_data* gnss_data_out
             // From DDmm.mm to DD.DDDDD
             double degrees, minutes;
             minutes = modf(latitude / 100.0, &degrees) * 100.0;  // DD.mmmm
-            gnss_data_out->latitude_dec = degrees + minutes / 60.0;
+            gnss_data_out->coordinates.latitude_dec = degrees + minutes / 60.0;
 
             // In southern hemisphere latitude is negative
             if (latitude_dir == 'S') {
-                gnss_data_out->latitude_dec *= -1.0f;
+                gnss_data_out->coordinates.latitude_dec *= -1.0f;
             }
 
             // Convert longitude to decimal degrees
             // From DDDmm.mm to DDD.DDDD
             minutes = modf(longitude / 100.0, &degrees) * 100.0;  // DDD.mmmm
-            gnss_data_out->longitude_dec = degrees + minutes / 60.0;
+            gnss_data_out->coordinates.longitude_dec = degrees + minutes / 60.0;
 
             // In western hemisphere longitude is negative
             if (longitude_dir == 'W') {
-                gnss_data_out->longitude_dec *= -1.0f;
+                gnss_data_out->coordinates.longitude_dec *= -1.0f;
             }
 
             gnss_data_out->quality = quality;

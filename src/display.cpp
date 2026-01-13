@@ -12,6 +12,7 @@ GFXcanvas16 canvas = GFXcanvas16(TFT_WIDTH, TFT_HEIGHT);
 
 void initDisplay() {
     tft.init(TFT_WIDTH, TFT_HEIGHT);
+    tft.setRotation(2);
 }
 
 int roundUp(int numToRound, int multiple) {
@@ -50,5 +51,12 @@ void drawCompass(int heading) {
     const int16_t heading_y2 = center_y + radius * cos(heading_radians2);
 
     canvas.fillTriangle(center_x, center_y, heading_x1, heading_y1, heading_x2, heading_y2, color);
+
+    canvas.setCursor(center_x-18, TFT_HEIGHT-24);
+    canvas.setTextColor(color);
+    canvas.setTextSize(3);
+    canvas.setTextWrap(true);
+    canvas.print(roundUp(heading, 10));
+
     tft.drawRGBBitmap(0, 0, canvas.getBuffer(), canvas.width(), canvas.height());
 }
