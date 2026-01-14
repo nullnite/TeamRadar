@@ -3,6 +3,7 @@
 #include <time.h>
 
 constexpr int teamSize = 2;
+constexpr int GPS_MESSAGE_BUFFER_MAX_LENGTH = 200;
 
 typedef struct {
     float latitude_dec;

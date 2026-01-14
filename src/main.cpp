@@ -15,16 +15,16 @@ void setup() {
 
 void loop() {
     // Get current direction of this and every other device
-    // coords myLocation = getLocation();
-    coords myLocation = {54.868, 23.938};
+    coords teamLocations[teamSize];
+    getTeamLocations(teamLocations);
 
-    coords teamLocations[teamSize] = {{54.868, 23.936},
-                                      {54.868, 23.938}};
-    // getTeamLocations(teamLocations);
+    coords myLocation = getLocation();
 
-    int teamBearings[teamSize] = {0, 0};
+    // Share location of this device with others
+    sendLocation(myLocation);
 
     // Get direction from current location to each team member - bearings
+    int teamBearings[teamSize];
     for (int i = 0; i < teamSize; i++) {
         teamBearings[i] = calculateBearing(myLocation, teamLocations[i]);
     }

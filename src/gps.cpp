@@ -1,7 +1,24 @@
 #include "gps.h"
 
+volatile bool PPS_FLAG = false;
+uint8_t gps_message_buffer[GPS_MESSAGE_BUFFER_MAX_LENGTH];
+gnss_data gnss_fix = {0};
+coords current_location = {0};
+
+void PPS_Interrupt() {
+    PPS_FLAG = true;
+}
+
 void initGPS() {
-    Serial1.begin(9600);
+    Serial2.begin(9600);
+    pinMode(PIN_NFC1, INPUT);
+    attachInterrupt(digitalPinToInterrupt(PIN_NFC1), PPS_Interrupt, RISING);
+}
+
+void readNMEA() {
+    while (Serial2.available()) {
+        Serial2.readBytes(gps_message_buffer, GPS_MESSAGE_BUFFER_MAX_LENGTH);
+    }
 }
 
 bool parseNMEA(uint8_t* message, size_t message_length, gnss_data* gnss_data_out) {
@@ -11,7 +28,7 @@ bool parseNMEA(uint8_t* message, size_t message_length, gnss_data* gnss_data_out
         char latitude_dir, longitude_dir;
         int quality, satellites;
 
-        int variables_read = sscanf(token, "$GPGGA,%lf,%lf,%c,%lf,%c,%d,%d,%*s",
+        int variables_read = sscanf(token, "$GNGGA,%lf,%lf,%c,%lf,%c,%d,%d,%*s",
                                     &nmea_time, &latitude, &latitude_dir, &longitude, &longitude_dir, &quality, &satellites);
 
         if (variables_read == 7) {
@@ -62,6 +79,20 @@ bool parseNMEA(uint8_t* message, size_t message_length, gnss_data* gnss_data_out
 }
 
 coords getLocation() {
+    // if (PPS_FLAG) {
+    if (true) {
+        readNMEA();
+        parseNMEA(gps_message_buffer, GPS_MESSAGE_BUFFER_MAX_LENGTH, &gnss_fix);
+        PPS_FLAG = false;
+    }
+    Serial.printf("Sat:%d \t Qlt:%d\r\n", gnss_fix.satellites, gnss_fix.quality);
+
+    if (gnss_fix.coordinates.latitude_dec != 0) {
+        current_location = gnss_fix.coordinates;
+    }
+    // Serial.printf("%f %f\n", current_location.latitude_dec, current_location.longitude_dec);
+
+    return current_location;
 }
 
 float calculateBearing(coords start, coords end) {

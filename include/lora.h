@@ -3,3 +3,4 @@
 
 void initLora();
 void getTeamLocations(coords locations[]);
+void sendLocation(coords location);
