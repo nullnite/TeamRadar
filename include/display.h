@@ -5,4 +5,4 @@
 
 void initDisplay();
 int roundUp(int numToRound, int multiple);
-void drawCompass(int heading);
+void drawCompass(int heading, int bearings[]);

@@ -69,7 +69,7 @@ ICM_20948_AGMT_t readIMU() {
             double yaw = atan2(2.0 * (q0 * q3 + q1 * q2),
                                1.0 - 2.0 * (q2 * q2 + q3 * q3));
 
-            double yaw_deg = yaw * 180.0 / PI;
+            double yaw_deg = yaw * RAD_TO_DEG;
 
             if (yaw_deg < 0) yaw_deg += 360.0;
 
@@ -149,13 +149,12 @@ float computeHeading(float mx_raw, float my_raw, float mz_raw,
     float myh = mx * sinf(roll) * sinf(pitch) + my * cosf(roll) - mz * sinf(roll) * cosf(pitch);
     */
 
-    float heading_rad = atan2f(my, mx);
-    float heading_deg = heading_rad * 180.0f / M_PI;
+    float heading = atan2f(my, mx) * RAD_TO_DEG;
 
-    if (heading_deg < 0.0f) heading_deg += 360.0f;
-    if (heading_deg >= 360.0f) heading_deg -= 360.0f;
+    if (heading < 0) heading += 360;
+    if (heading >= 360) heading -= 360;
 
-    return heading_deg;
+    return heading;
 }
 
 float getHeading() {
@@ -167,5 +166,8 @@ float getHeading() {
     float heading = computeHeading(mag.axes.x * 0.1, mag.axes.y * 0.1, mag.axes.z * 0.1,
                                    acc.axes.x, acc.axes.y, acc.axes.z);
 
-    return heading;
+    // Magnetic declination for Kaunas, Lithuania
+    constexpr int magneticDeclination = 8.0 + (20.0 / 60.0);
+
+    return heading + magneticDeclination;
 }

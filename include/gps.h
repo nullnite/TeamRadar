@@ -2,6 +2,8 @@
 #include <Arduino.h>
 #include <time.h>
 
+constexpr int teamSize = 2;
+
 typedef struct {
     float latitude_dec;
     float longitude_dec;
@@ -16,4 +18,5 @@ typedef struct {
 
 void initGPS();
 bool parseNMEA(uint8_t* message, size_t message_length, gnss_data* gnss_data_out);
-bool getCoordinates();
+coords getLocation();
+float calculateBearing(coords start, coords end);

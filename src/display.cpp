@@ -1,7 +1,10 @@
 #include "display.h"
 
+#include "gps.h"
+
 constexpr uint16_t TFT_WIDTH = 240;
 constexpr uint16_t TFT_HEIGHT = 280;
+constexpr uint8_t TFT_ROTATION = 2;
 
 constexpr int8_t TFT_CS = PIN_QSPI_CS;
 constexpr int8_t TFT_RST = PIN_LED1;
@@ -12,7 +15,7 @@ GFXcanvas16 canvas = GFXcanvas16(TFT_WIDTH, TFT_HEIGHT);
 
 void initDisplay() {
     tft.init(TFT_WIDTH, TFT_HEIGHT);
-    tft.setRotation(2);
+    tft.setRotation(TFT_ROTATION);
 }
 
 int roundUp(int numToRound, int multiple) {
@@ -29,7 +32,7 @@ int roundUp(int numToRound, int multiple) {
         return numToRound + multiple - remainder;
 }
 
-void drawCompass(int heading) {
+void drawCompass(int heading, int bearings[]) {
     constexpr int16_t radius = 100;
     constexpr uint16_t background_color = ST77XX_BLACK;
     constexpr uint16_t color = ST77XX_GREEN;
@@ -37,26 +40,36 @@ void drawCompass(int heading) {
     constexpr int16_t center_x = TFT_WIDTH / 2;
     constexpr int16_t center_y = TFT_HEIGHT / 2;
 
+    // Outer circle
     canvas.fillScreen(background_color);
     canvas.drawCircle(center_x, center_y, radius, color);
 
-    const int rounded_heading = roundUp(heading, 40);
+    // Heading marker
+    const int rounded_heading = roundUp(heading, 30);
 
-    const float heading_radians1 = (rounded_heading - 20) * PI / 180;
+    const float heading_radians1 = (rounded_heading - 15) * DEG_TO_RAD;
     const int16_t heading_x1 = center_x + radius * sin(heading_radians1);
     const int16_t heading_y1 = center_y + radius * cos(heading_radians1);
 
-    const float heading_radians2 = (rounded_heading + 20) * PI / 180;
+    const float heading_radians2 = (rounded_heading + 15) * DEG_TO_RAD;
     const int16_t heading_x2 = center_x + radius * sin(heading_radians2);
     const int16_t heading_y2 = center_y + radius * cos(heading_radians2);
 
-    canvas.fillTriangle(center_x, center_y, heading_x1, heading_y1, heading_x2, heading_y2, color);
+    // canvas.fillTriangle(center_x, center_y, heading_x1, heading_y1, heading_x2, heading_y2, color);
 
-    canvas.setCursor(center_x-18, TFT_HEIGHT-24);
+    // Heading indicator
+    canvas.setCursor(center_x - 18, TFT_HEIGHT - 24);
     canvas.setTextColor(color);
     canvas.setTextSize(3);
     canvas.setTextWrap(true);
-    canvas.print(roundUp(heading, 10));
+    canvas.print(heading);
 
+    // Team indicators
+    for (int i = 0; i < teamSize; i++) {
+        canvas.setCursor(center_x + i * 18, center_y + i * 24);
+        canvas.println(bearings[i]);
+    }
+
+    // Double buffer to avoid flicker
     tft.drawRGBBitmap(0, 0, canvas.getBuffer(), canvas.width(), canvas.height());
 }

@@ -2,4 +2,4 @@
 #include "gps.h"
 
 void initLora();
-coords getTeamCoordinates();
+void getTeamLocations(coords locations[]);

@@ -61,5 +61,25 @@ bool parseNMEA(uint8_t* message, size_t message_length, gnss_data* gnss_data_out
     return false;
 }
 
-bool getCoordinates() {
+coords getLocation() {
+}
+
+float calculateBearing(coords start, coords end) {
+    double latitudeStart = start.latitude_dec * DEG_TO_RAD;
+    double latitudeEnd = end.latitude_dec * DEG_TO_RAD;
+    double longitudeStart = start.longitude_dec * DEG_TO_RAD;
+    double longitudeEnd = end.longitude_dec * DEG_TO_RAD;
+
+    double deltaLongitude = longitudeEnd - longitudeStart;
+
+    double y = sin(deltaLongitude) * cos(latitudeEnd);
+    double x = cos(latitudeStart) * sin(latitudeEnd) -
+               sin(latitudeStart) * cos(latitudeEnd) * cos(deltaLongitude);
+
+    double bearing = atan2(y, x) * RAD_TO_DEG;
+    if (bearing < 0) {
+        bearing += 360;
+    }
+
+    return bearing;
 }
