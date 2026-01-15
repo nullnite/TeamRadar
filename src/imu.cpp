@@ -112,23 +112,23 @@ float computeHeading(float mx_raw, float my_raw, float mz_raw,
     float my_cal = soft_iron[1][0] * mx_hi + soft_iron[1][1] * my_hi + soft_iron[1][2] * mz_hi;
     float mz_cal = soft_iron[2][0] * mx_hi + soft_iron[2][1] * my_hi + soft_iron[2][2] * mz_hi;
 
-    // Remap axis
-    // Magnetometer:
+    // Remap axis to common reference frame
+    // Magnetometer
     // +X back -> forward = -X
     // +Y left -> left    = +Y
-    // +Z down -> down    = +Z
+    // +Z down -> up      = -Z
     float mx = -mx_cal;
     float my = my_cal;
-    float mz = mz_cal;
+    float mz = -mz_cal;
 
-    /*
-    // Accelerometer:
+    // Accelerometer
     // +X back  -> forward = -X
-    // +Y right -> right   = +Y
+    // +Y right -> left    = -Y
     // +Z up    -> up      = +Z
-    float ax = ax_raw;
-    float ay = ay_raw;
+    float ax = -ax_raw;
+    float ay = -ay_raw;
     float az = az_raw;
+    Serial.printf("%f %f %f\n", ax, ay, az);
 
     // Compute roll/pitch from accelerometer
     float normA = sqrtf(ax * ax + ay * ay + az * az);
@@ -137,19 +137,18 @@ float computeHeading(float mx_raw, float my_raw, float mz_raw,
     ay /= normA;
     az /= normA;
 
-    Serial.print("Roll:");
+    // Serial.print("Roll:");
     float roll = atan2f(ay, az);
-    Serial.println(roll);
-    Serial.print("Pitch:");
+    // Serial.println(roll);
+    // Serial.print("Pitch:");
     float pitch = atan2f(-ax, sqrtf(ay * ay + az * az));
-    Serial.println(pitch);
+    // Serial.println(pitch);
 
     // Compensate for tilt
     float mxh = mx * cosf(pitch) + mz * sinf(pitch);
     float myh = mx * sinf(roll) * sinf(pitch) + my * cosf(roll) - mz * sinf(roll) * cosf(pitch);
-    */
 
-    float heading = atan2f(my, mx) * RAD_TO_DEG;
+    float heading = atan2f(myh, mxh) * RAD_TO_DEG;
 
     if (heading < 0) heading += 360;
     if (heading >= 360) heading -= 360;
