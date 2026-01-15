@@ -38,25 +38,30 @@ void drawCompass(int heading, int bearings[], gnss_data* gnss_fix) {
     constexpr int16_t center_x = TFT_WIDTH / 2;
     constexpr int16_t center_y = TFT_HEIGHT / 2;
 
+    constexpr int16_t char_width = 18;
+    constexpr int16_t char_height = 24;
+
     // Outer circle
     canvas.fillScreen(background_color);
     canvas.drawCircle(center_x, center_y, radius, color);
 
+    /*
     // Heading marker
     const int rounded_heading = roundUp(heading, 30);
 
     const float heading_radians1 = (rounded_heading - 15) * DEG_TO_RAD;
     const int16_t heading_x1 = center_x + radius * sin(heading_radians1);
-    const int16_t heading_y1 = center_y + radius * cos(heading_radians1);
+    const int16_t heading_y1 = center_y - radius * cos(heading_radians1);
 
     const float heading_radians2 = (rounded_heading + 15) * DEG_TO_RAD;
     const int16_t heading_x2 = center_x + radius * sin(heading_radians2);
-    const int16_t heading_y2 = center_y + radius * cos(heading_radians2);
+    const int16_t heading_y2 = center_y - radius * cos(heading_radians2);
 
-    // canvas.fillTriangle(center_x, center_y, heading_x1, heading_y1, heading_x2, heading_y2, color);
+    canvas.fillTriangle(center_x, center_y, heading_x1, heading_y1, heading_x2, heading_y2, color);
+    */
 
     // Heading indicator
-    canvas.setCursor(center_x - 18, TFT_HEIGHT - 24);
+    canvas.setCursor(center_x - char_width, TFT_HEIGHT - char_height);
     canvas.setTextColor(color);
     canvas.setTextSize(3);
     canvas.print(heading);
@@ -64,9 +69,15 @@ void drawCompass(int heading, int bearings[], gnss_data* gnss_fix) {
     // Team indicators
     for (int i = 0; i < teamSize; i++) {
         if (bearings[i] != -1) {
-            //canvas.setCursor(center_x + i * 18, center_y + i * 24);
-            canvas.setCursor(center_x, center_y);
-            canvas.println(bearings[i]);
+            const int ID = i;
+            const int angle_rounded = roundUp(bearings[i] - heading, 10);
+            const float angle_radians = angle_rounded * DEG_TO_RAD;
+
+            const int16_t x = center_x + (radius - 20) * sin(angle_radians);
+            const int16_t y = center_y - (radius - 20) * cos(angle_radians);
+
+            canvas.setCursor(x - char_width / 2, y - char_height / 2);
+            canvas.print(ID);
         }
     }
 
@@ -76,7 +87,7 @@ void drawCompass(int heading, int bearings[], gnss_data* gnss_fix) {
     constexpr uint16_t good_color = ST77XX_GREEN;
 
     // Number of GNSS satellites
-    canvas.setCursor(0 + 18, 0 + 24 / 2);
+    canvas.setCursor(0 + char_width, 0 + char_height / 2);
     if (gnss_fix->satellites == 0) {
         canvas.setTextColor(bad_color);
     } else if (gnss_fix->satellites < 4) {
@@ -87,7 +98,7 @@ void drawCompass(int heading, int bearings[], gnss_data* gnss_fix) {
     canvas.print(gnss_fix->satellites);
 
     // Position fix
-    canvas.setCursor(TFT_WIDTH - 18 * 3.5, 0 + 24 / 2);
+    canvas.setCursor(TFT_WIDTH - char_width * 3.5, 0 + char_height / 2);
     if (gnss_fix->quality == 0) {
         canvas.setTextColor(bad_color);
         canvas.print("Bad");
