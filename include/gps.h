@@ -3,7 +3,7 @@
 #include <time.h>
 
 constexpr int teamSize = 2;
-constexpr int GPS_MESSAGE_BUFFER_MAX_LENGTH = 200;
+constexpr int GPS_MESSAGE_BUFFER_MAX_LENGTH = 100;
 
 typedef struct {
     float latitude_dec;
@@ -19,5 +19,5 @@ typedef struct {
 
 void initGPS();
 bool parseNMEA(uint8_t* message, size_t message_length, gnss_data* gnss_data_out);
-coords getLocation();
+void getGNSSData(gnss_data* gnss_fix);
 float calculateBearing(coords start, coords end);

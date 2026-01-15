@@ -5,6 +5,10 @@
 #include "imu.h"
 #include "lora.h"
 
+gnss_data gnss_fix = {0};
+coords myLocation = {0};
+coords teamLocations[teamSize] = {0};
+
 void setup() {
     Serial.begin(115200);
     initDisplay();
@@ -14,11 +18,14 @@ void setup() {
 }
 
 void loop() {
-    // Get current direction of this and every other device
-    coords teamLocations[teamSize];
+    // Get current location of team members
     getTeamLocations(teamLocations);
 
-    coords myLocation = getLocation();
+    // Update my location, but only if new GNSS data has valid position fix
+    getGNSSData(&gnss_fix);
+    if (gnss_fix.quality == 1) {
+        myLocation = gnss_fix.coordinates;
+    }
 
     // Share location of this device with others
     sendLocation(myLocation);
@@ -26,7 +33,11 @@ void loop() {
     // Get direction from current location to each team member - bearings
     int teamBearings[teamSize];
     for (int i = 0; i < teamSize; i++) {
-        teamBearings[i] = calculateBearing(myLocation, teamLocations[i]);
+        if (teamLocations[i].latitude_dec != 0) {
+            teamBearings[i] = calculateBearing(myLocation, teamLocations[i]);
+        } else {
+            teamBearings[i] = -1;
+        }
     }
 
     // Get current direction - heading
@@ -39,5 +50,5 @@ void loop() {
     heading /= averages;
 
     // Draw indicators for directions
-    drawCompass(heading, teamBearings);
+    drawCompass(heading, teamBearings, &gnss_fix);
 }
