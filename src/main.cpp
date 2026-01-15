@@ -6,8 +6,9 @@
 #include "lora.h"
 
 gnss_data gnss_fix = {0};
-coords myLocation = {0};
+coords myLocation = {0, 0};
 coords teamLocations[teamSize] = {0};
+uint32_t lastSent;
 
 void setup() {
     Serial.begin(115200);
@@ -28,7 +29,12 @@ void loop() {
     }
 
     // Share location of this device with others
-    sendLocation(myLocation);
+    constexpr uint32_t update_period = 10000;
+    uint32_t now = millis();
+    if (now - lastSent > update_period) {
+        sendLocation(myLocation);
+        lastSent = now;
+    }
 
     // Get direction from current location to each team member - bearings
     int teamBearings[teamSize];
@@ -45,7 +51,6 @@ void loop() {
     constexpr int averages = 10;
     for (int i = 0; i < averages; i++) {
         heading += getHeading();
-        delay(10);
     }
     heading /= averages;
 

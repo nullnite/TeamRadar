@@ -2,8 +2,7 @@
 #include <Arduino.h>
 #include <time.h>
 
-constexpr int teamSize = 2;
-constexpr int GPS_MESSAGE_BUFFER_MAX_LENGTH = 100;
+constexpr int teamSize = 16;
 
 typedef struct {
     float latitude_dec;

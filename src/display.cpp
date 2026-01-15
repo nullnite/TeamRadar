@@ -64,7 +64,8 @@ void drawCompass(int heading, int bearings[], gnss_data* gnss_fix) {
     // Team indicators
     for (int i = 0; i < teamSize; i++) {
         if (bearings[i] != -1) {
-            canvas.setCursor(center_x + i * 18, center_y + i * 24);
+            //canvas.setCursor(center_x + i * 18, center_y + i * 24);
+            canvas.setCursor(center_x, center_y);
             canvas.println(bearings[i]);
         }
     }

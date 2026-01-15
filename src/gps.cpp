@@ -1,6 +1,7 @@
 #include "gps.h"
 
 volatile bool PPS_FLAG = false;
+constexpr int GPS_MESSAGE_BUFFER_MAX_LENGTH = 100;
 uint8_t gps_message_buffer[GPS_MESSAGE_BUFFER_MAX_LENGTH];
 
 void PPS_Interrupt() {
