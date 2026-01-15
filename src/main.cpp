@@ -8,7 +8,11 @@
 gnss_data gnss_fix = {0};
 coords myLocation = {0, 0};
 coords teamLocations[teamSize] = {0};
-uint32_t lastSent;
+uint32_t lastSent = 0;
+
+constexpr int averages = 10;
+int headingIndex = 0;
+float headings[averages] = {0};
 
 void setup() {
     Serial.begin(115200);
@@ -46,14 +50,24 @@ void loop() {
         }
     }
 
-    // Get current direction - heading
-    float heading = 0;
-    constexpr int averages = 10;
+    // Calculate moving average of current direction - heading
+    headings[headingIndex] = getHeading();
+    headingIndex++;
+    if (headingIndex == averages) headingIndex = 0;
+
+    float sumSin = 0;
+    float sumCos = 0;
     for (int i = 0; i < averages; i++) {
-        heading += getHeading();
+        float rad = headings[i] * DEG_TO_RAD;
+        sumSin += sin(rad);
+        sumCos += cos(rad);
     }
-    heading /= averages;
+
+    float average_radians = atan2(sumSin / averages, sumCos / averages);
+    float average_heading = average_radians * RAD_TO_DEG;
+
+    if (average_heading < 0) average_heading += 360;
 
     // Draw indicators for directions
-    drawCompass(heading, teamBearings, &gnss_fix);
+    drawCompass(average_heading, teamBearings, &gnss_fix);
 }
