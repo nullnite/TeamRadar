@@ -116,7 +116,7 @@ void drawCompass(int heading, int bearings[], int distances[], gnss_data* gnss_f
     // Team indicators
     for (int i = 0; i < teamSize; i++) {
         if (bearings[i] != -1) {
-            const int ID = i;
+            const char ID = i;
 
             // Calculate relative angle
             const int angle_rounded = roundUp(bearings[i] - heading, 10);

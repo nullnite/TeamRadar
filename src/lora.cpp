@@ -70,7 +70,7 @@ void OnRxDone(uint8_t* payload, uint16_t size, int16_t rssi, int8_t snr) {
     memcpy(&packet, RcvBuffer, sizeof(packet));
 
     if (packet.ID < teamSize) {
-        Serial.printf("LoRa packet received from ID %d\r\n", packet.ID);
+        Serial.printf("LoRa packet received from ID %c\r\n", packet.ID);
         receivedLocations[packet.ID] = packet.location;
     }
 

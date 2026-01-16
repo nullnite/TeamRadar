@@ -5,7 +5,7 @@
 #include "gps.h"
 
 typedef struct {
-    uint8_t ID = 1;
+    char ID = '1';
     coords location;
 } lora_packet;
 

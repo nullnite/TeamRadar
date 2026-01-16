@@ -2,7 +2,7 @@
 #include <Arduino.h>
 #include <time.h>
 
-constexpr int teamSize = 16;
+constexpr int teamSize = 255;
 
 typedef struct {
     float latitude_dec;
