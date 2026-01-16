@@ -97,12 +97,20 @@ ICM_20948_AGMT_t readIMU() {
 float computeHeading(float mx_raw, float my_raw, float mz_raw,
                      float ax_raw, float ay_raw, float az_raw) {
     // Magnetometer calibration coefficients from MotionCal
+    /*//Calibrated on rifle with battery and scope
     constexpr float hard_iron[3] =
-        {-17.12, -5.76, 11.15};
+        {-27.24, -3.36, 17.36};
     constexpr float soft_iron[3][3] = {
-        {1.006, 0.000, 0.009},
-        {0.000, 0.998, -0.001},
-        {0.009, -0.001, 0.996}};
+        {0.987, -0.020, 0.016},
+        {-0.020, 1.052, -0.001},
+        {0.016, -0.001, 0.963}};*/
+    // Calibrated without rifle with battery and scope
+    constexpr float hard_iron[3] =
+        {-17.72, -3.66, 13.30};
+    constexpr float soft_iron[3][3] = {
+        {0.964, -0.016, 0.013},
+        {-0.016, 1.040, -0.009},
+        {0.013, -0.009, 0.998}};
 
     float mx_hi = mx_raw - hard_iron[0];
     float my_hi = my_raw - hard_iron[1];
@@ -162,6 +170,7 @@ float getHeading() {
     ICM_20948_axis3named_t acc = agmt.acc;
     ICM_20948_axis3named_t mag = agmt.mag;
 
+    // Serial.printf("Raw:0,0,0,0,0,0,%f,%f,%f\r\n", mag.axes.x, mag.axes.y, mag.axes.z);
     float heading = computeHeading(mag.axes.x * 0.1, mag.axes.y * 0.1, mag.axes.z * 0.1,
                                    acc.axes.x, acc.axes.y, acc.axes.z);
 

@@ -6,7 +6,8 @@
 #include "lora.h"
 
 gnss_data gnss_fix = {0};
-coords myLocation = {0, 0};
+// coords myLocation = {0, 0};
+coords myLocation = {54.904016, 23.957698};  // KTU XI
 coords teamLocations[teamSize] = {0};
 uint32_t lastSent = 0;
 
