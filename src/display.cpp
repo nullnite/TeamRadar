@@ -166,6 +166,28 @@ void drawCompass(int heading, int bearings[], int distances[], gnss_data* gnss_f
         canvas.print("Fix");
     }
 
+    // Batery voltage indicator
+    constexpr float R7 = 0.998e6f;      // ohms
+    constexpr float R8 = 1.502e6f;      // ohms
+    constexpr float ADC_MAX = 1023.0f;  // ADC
+    constexpr float VREF = 3.7f;        // VDD reference
+
+    uint32_t adc_raw = analogRead(batteryVoltagePin);
+
+    float Vout = (float)adc_raw * (VREF / ADC_MAX);
+    float Vbat = Vout * ((R7 + R8) / R8);
+
+    if (Vbat > 4.0) {
+        canvas.setTextColor(good_color);
+    } else if (Vbat > 3.7) {
+        canvas.setTextColor(fair_color);
+    } else {
+        canvas.setTextColor(bad_color);
+    }
+
+    canvas.setCursor(center_x - char_width * 2, 0 + char_height / 2);
+    canvas.print(Vbat);
+
     // Double buffer to avoid flicker
     tft.drawRGBBitmap(0, 0, canvas.getBuffer(), canvas.width(), canvas.height());
 
