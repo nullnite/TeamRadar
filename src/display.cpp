@@ -11,9 +11,56 @@ constexpr int8_t TFT_DC = PIN_NFC2;
 Adafruit_ST7789 tft = Adafruit_ST7789(TFT_CS, TFT_DC, TFT_RST);
 GFXcanvas16 canvas = GFXcanvas16(TFT_WIDTH, TFT_HEIGHT);
 
+constexpr uint8_t button1Pin = WB_SW1;
+constexpr uint8_t button2Pin = WB_IO2;
+constexpr uint8_t button3Pin = WB_IO1;
+constexpr uint8_t backlightPWMPin = WB_A1;
+constexpr uint8_t batteryVoltagePin = PIN_A0;
+
+volatile int backlightBrightness = 255;
+
+void button1Pressed() {
+    backlightBrightness = backlightBrightness + 50;
+    if (backlightBrightness > 255) {
+        backlightBrightness = 255;
+    }
+}
+
+void button2Pressed() {
+    /*
+    if (backlightBrightness > 127) {
+        backlightBrightness = 0;
+    } else {
+        backlightBrightness = 255;
+    }
+    */
+}
+
+void button3Pressed() {
+    backlightBrightness = backlightBrightness - 50;
+    if (backlightBrightness < 0) {
+        backlightBrightness = 0;
+    }
+}
+
 void initDisplay() {
     tft.init(TFT_WIDTH, TFT_HEIGHT);
     tft.setRotation(TFT_ROTATION);
+
+    // Buttons
+    pinMode(button1Pin, INPUT_PULLUP);
+    pinMode(button2Pin, INPUT_PULLUP);
+    pinMode(button3Pin, INPUT_PULLUP);
+
+    attachInterrupt(digitalPinToInterrupt(button1Pin), button1Pressed, FALLING);
+    attachInterrupt(digitalPinToInterrupt(button2Pin), button2Pressed, FALLING);
+    attachInterrupt(digitalPinToInterrupt(button3Pin), button3Pressed, FALLING);
+
+    // Backlight control
+    pinMode(backlightPWMPin, OUTPUT);
+
+    // Battery voltage
+    pinMode(batteryVoltagePin, INPUT);
 }
 
 int roundUp(int numToRound, int multiple) {
@@ -121,4 +168,6 @@ void drawCompass(int heading, int bearings[], int distances[], gnss_data* gnss_f
 
     // Double buffer to avoid flicker
     tft.drawRGBBitmap(0, 0, canvas.getBuffer(), canvas.width(), canvas.height());
+
+    analogWrite(backlightPWMPin, backlightBrightness);
 }
