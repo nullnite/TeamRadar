@@ -158,7 +158,7 @@ float calculateBearing(coords start, coords end) {
     double longitudeStart = start.longitude_dec * DEG_TO_RAD;
     double longitudeEnd = end.longitude_dec * DEG_TO_RAD;
 
-    // Apply great circle bearing formula
+    // Apply haversine (for great circle bearing) formula
     double deltaLongitude = longitudeEnd - longitudeStart;
 
     double y = sin(deltaLongitude) * cos(latitudeEnd);
@@ -171,4 +171,27 @@ float calculateBearing(coords start, coords end) {
     }
 
     return bearing;
+}
+
+float calculateDistance(coords start, coords end) {
+    const double R = 6371000.0;  // Earth radius in metres
+
+    double latitudeStart = start.latitude_dec * DEG_TO_RAD;
+    double latitudeEnd = end.latitude_dec * DEG_TO_RAD;
+    double longitudeStart = start.longitude_dec * DEG_TO_RAD;
+    double longitudeEnd = end.longitude_dec * DEG_TO_RAD;
+
+    double deltaLatitude = latitudeEnd - latitudeStart;
+    double deltaLongitude = longitudeEnd - longitudeStart;
+
+    // Apply haversine (for great circle distances) formula
+    double a = sin(deltaLatitude / 2) * sin(deltaLatitude / 2) +
+               cos(latitudeStart) * cos(latitudeEnd) *
+                   sin(deltaLongitude / 2) * sin(deltaLongitude / 2);
+
+    double c = 2 * atan2(sqrt(a), sqrt(1 - a));
+
+    double distance = R * c;  // distance in metres
+
+    return distance;
 }

@@ -20,3 +20,4 @@ void initGPS();
 bool parseNMEA(uint8_t* message, size_t message_length, gnss_data* gnss_data_out);
 void getGNSSData(gnss_data* gnss_fix);
 float calculateBearing(coords start, coords end);
+float calculateDistance(coords start, coords end);

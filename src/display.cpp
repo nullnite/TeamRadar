@@ -30,7 +30,7 @@ int roundUp(int numToRound, int multiple) {
         return numToRound + multiple - remainder;
 }
 
-void drawCompass(int heading, int bearings[], gnss_data* gnss_fix) {
+void drawCompass(int heading, int bearings[], int distances[], gnss_data* gnss_fix) {
     constexpr int16_t radius = 100;
     constexpr uint16_t background_color = ST77XX_BLACK;
     constexpr uint16_t color = ST77XX_GREEN;
@@ -70,11 +70,23 @@ void drawCompass(int heading, int bearings[], gnss_data* gnss_fix) {
     for (int i = 0; i < teamSize; i++) {
         if (bearings[i] != -1) {
             const int ID = i;
+
+            // Calculate relative angle
             const int angle_rounded = roundUp(bearings[i] - heading, 10);
             const float angle_radians = angle_rounded * DEG_TO_RAD;
 
-            const int16_t x = center_x + (radius - 20) * sin(angle_radians);
-            const int16_t y = center_y - (radius - 20) * cos(angle_radians);
+            // Clamp distance to 0–500 m
+            float distance = distances[i];
+            if (distance < 0) distance = 0;
+            if (distance > 500) distance = 500;
+
+            // Scale and apply distance
+            constexpr float deadzone = 10.0f;
+            const float usable_radius = radius - deadzone;
+            const float scaled_radius = deadzone + (distance / 500.0f) * usable_radius;
+
+            const int16_t x = center_x + scaled_radius * sin(angle_radians);
+            const int16_t y = center_y - scaled_radius * cos(angle_radians);
 
             canvas.setCursor(x - char_width / 2, y - char_height / 2);
             canvas.print(ID);

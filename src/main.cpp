@@ -41,9 +41,11 @@ void loop() {
     }
 
     // Get direction from current location to each team member - bearings
+    int teamDistances[teamSize];
     int teamBearings[teamSize];
     for (int i = 0; i < teamSize; i++) {
         if (teamLocations[i].latitude_dec != 0) {
+            teamDistances[i] = calculateDistance(myLocation, teamLocations[i]);
             teamBearings[i] = calculateBearing(myLocation, teamLocations[i]);
         } else {
             teamBearings[i] = -1;
@@ -69,5 +71,5 @@ void loop() {
     if (average_heading < 0) average_heading += 360;
 
     // Draw indicators for directions
-    drawCompass(average_heading, teamBearings, &gnss_fix);
+    drawCompass(average_heading, teamBearings, teamDistances, &gnss_fix);
 }

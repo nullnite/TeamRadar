@@ -128,7 +128,7 @@ float computeHeading(float mx_raw, float my_raw, float mz_raw,
     float ax = -ax_raw;
     float ay = -ay_raw;
     float az = az_raw;
-    Serial.printf("%f %f %f\n", ax, ay, az);
+    // Serial.printf("%f %f %f\n", ax, ay, az);
 
     // Compute roll/pitch from accelerometer
     float normA = sqrtf(ax * ax + ay * ay + az * az);

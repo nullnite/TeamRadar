@@ -7,4 +7,4 @@
 
 void initDisplay();
 int roundUp(int numToRound, int multiple);
-void drawCompass(int heading, int bearings[], gnss_data* gnss_fix);
+void drawCompass(int heading, int bearings[], int distances[], gnss_data* gnss_fix);
