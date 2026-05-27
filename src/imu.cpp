@@ -1,5 +1,7 @@
 #include "imu.h"
 
+#include <math.h>
+
 constexpr bool AD0_VAL = 0;
 
 ICM_20948_I2C myICM;
@@ -41,9 +43,12 @@ void initIMU() {
 }
 
 ICM_20948_AGMT_t readIMU() {
+    static ICM_20948_AGMT_t lastSample = {};
     if (myICM.dataReady()) {
-        return myICM.getAGMT();
+        lastSample = myICM.getAGMT();
     }
+
+    return lastSample;
 
     /*
     icm_20948_DMP_data_t data;
@@ -94,23 +99,64 @@ ICM_20948_AGMT_t readIMU() {
     */
 }
 
+void printMotionCalRaw() {
+    ICM_20948_AGMT_t agmt = readIMU();
+
+    int ax = (int)lroundf(agmt.acc.axes.x);
+    int ay = (int)lroundf(agmt.acc.axes.y);
+    int az = (int)lroundf(agmt.acc.axes.z);
+
+    int gx = 0;
+    int gy = 0;
+    int gz = 0;
+
+    int mx = (int)lroundf(agmt.mag.axes.x);
+    int my = (int)lroundf(agmt.mag.axes.y);
+    int mz = (int)lroundf(agmt.mag.axes.z);
+
+    Serial.print("Raw:");
+    Serial.print(ax);
+    Serial.print(",");
+    Serial.print(ay);
+    Serial.print(",");
+    Serial.print(az);
+    Serial.print(",");
+    Serial.print(gx);
+    Serial.print(",");
+    Serial.print(gy);
+    Serial.print(",");
+    Serial.print(gz);
+    Serial.print(",");
+    Serial.print(mx);
+    Serial.print(",");
+    Serial.print(my);
+    Serial.print(",");
+    Serial.println(mz);
+}
+
 float computeHeading(float mx_raw, float my_raw, float mz_raw,
                      float ax_raw, float ay_raw, float az_raw) {
     // Magnetometer calibration coefficients from MotionCal
-    /*//Calibrated on rifle with battery and scope
-    constexpr float hard_iron[3] =
+    // Calibrated on rifle with battery and scope
+    /*constexpr float hard_iron[3] =
         {-27.24, -3.36, 17.36};
     constexpr float soft_iron[3][3] = {
         {0.987, -0.020, 0.016},
         {-0.020, 1.052, -0.001},
         {0.016, -0.001, 0.963}};*/
     // Calibrated without rifle with battery and scope
-    constexpr float hard_iron[3] =
+    /*constexpr float hard_iron[3] =
         {-17.72, -3.66, 13.30};
     constexpr float soft_iron[3][3] = {
         {0.964, -0.016, 0.013},
         {-0.016, 1.040, -0.009},
-        {0.013, -0.009, 0.998}};
+        {0.013, -0.009, 0.998}};*/
+    constexpr float hard_iron[3] =
+        {-8.01, 12.06, 12.63};
+    constexpr float soft_iron[3][3] = {
+        {1.039, -0.048, 0.071},
+        {-0.048, 0.995, 0.046},
+        {0.071, 0.046, 0.977}};
 
     float mx_hi = mx_raw - hard_iron[0];
     float my_hi = my_raw - hard_iron[1];

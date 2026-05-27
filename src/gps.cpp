@@ -4,6 +4,18 @@ volatile bool PPS_FLAG = false;
 constexpr int GPS_MESSAGE_BUFFER_MAX_LENGTH = 100;
 uint8_t gps_message_buffer[GPS_MESSAGE_BUFFER_MAX_LENGTH];
 
+namespace {
+constexpr coords kFakeCoordinates = {54.900050f, 23.961277f};
+constexpr int kFakeQuality = 1;
+constexpr int kFakeSatellites = 12;
+
+void applyFakeGNSSData(gnss_data* gnss_fix) {
+    gnss_fix->coordinates = kFakeCoordinates;
+    gnss_fix->quality = kFakeQuality;
+    gnss_fix->satellites = kFakeSatellites;
+}
+}  // namespace
+
 void PPS_Interrupt() {
     PPS_FLAG = true;
 }
@@ -150,6 +162,8 @@ void getGNSSData(gnss_data* gnss_fix) {
             sentence_available = readNMEA();
         }
     }
+
+    applyFakeGNSSData(gnss_fix);
 }
 
 float calculateBearing(coords start, coords end) {
